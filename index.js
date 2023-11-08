@@ -56,4 +56,5 @@ app.get("/api/users", async (req, res) => {
     console.log("result :", result);
     return res.status(201).json({msg:"success"});
 
+    
 })
