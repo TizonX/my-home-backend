@@ -1,27 +1,29 @@
 const express = require("express");
-const User = require("../models/user");
+const Blog = require("../models/blog");
 
 // create user
 const createUser = async (req, res) => {
-    const body = req.body;
-    if (!body || !body.firstName || !body.lastName || !body.email || !body.gender || !body.jobTitle) {
-
-        return res.status(400).json({ msg: "All fields are require !!!" });
+    try {
+        const { title, description, postType } = req.body;
+        // const body = req.body;
+        if (!title || !description || !postType) {
+            return res.status(400).json({ msg: "All fields are require !!!" });
+        }
+        const result = await Blog.create({
+            title,
+            description,
+            postType,
+        });
+        return res.status(201).json({ msg: "success" });
+    } catch (error) {
+        console.log("create post err>> ", error.message);
     }
-    const result = await User.create({
-        firstName: body.firstName,
-        lastName: body.lastName,
-        email: body.email,
-        gender: body.gender,
-        jobTitle: body.jobTitle,
-    });
-    return res.status(201).json({ msg: "success" });
 }
 // get all user
 
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({});
+        const users = await Blog.find({});
         if (users) {
             res.json(users);
         }
@@ -38,15 +40,15 @@ const getAllUsers = async (req, res) => {
 const getUserById = async (req, res) => {
     const { _id } = req.params;
     try {
-        const user = await User.findOne({ _id })
+        const user = await Blog.findOne({ _id })
         if (user) {
             res.json(user);
         }
         else {
-            return res.status(404).json({ msg: "User not found" });
+            return res.status(404).json({ msg: "Blog not found" });
         }
     } catch (error) {
-        console.log("Get User Error >>", error);
+        console.log("Get Blog Error >>", error);
         return res.status(404).json({ msg: error.message });
     }
 
@@ -56,16 +58,16 @@ const getUserById = async (req, res) => {
 const updateUserById = async (req, res) => {
     const { _id } = req.params;
     try {
-        const user = await User.findById({ _id });
+        const user = await Blog.findById({ _id });
         if (!user) {
-            return res.status(404).json({ msg: 'User not found' });
+            return res.status(404).json({ msg: 'Blog not found' });
         }
         Object.assign(user, req.body);
         const updatedUser = await user.save();
         res.json(updatedUser);
 
     } catch (error) {
-        console.log("Patch User Error >>", error);
+        console.log("Patch Blog Error >>", error);
         return res.status(404).json({ msg: error.message });
     }
 }
@@ -74,14 +76,14 @@ const updateUserById = async (req, res) => {
 const deleteUserById = async (req, res) => {
     const { _id } = req.params;
     try {
-        const deletedUser = await User.findByIdAndDelete({ _id });
+        const deletedUser = await Blog.findByIdAndDelete({ _id });
         if (deletedUser) {
-            res.json({ msg: 'User deleted successfully' });
+            res.json({ msg: 'Blog deleted successfully' });
         } else {
-            res.status(404).json({ msg: 'User not found' });
+            res.status(404).json({ msg: 'Blog not found' });
         }
     } catch (error) {
-        console.log("Delete User Error >>", error);
+        console.log("Delete Blog Error >>", error);
         return res.status(404).json({ msg: error.message });
     }
 }

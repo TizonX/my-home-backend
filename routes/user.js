@@ -1,10 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/user");
-const { getAllUsers, createUser, getUserById, updateUserById, deleteUserById } = require("../controllers/user");
-
+const { getAllUsers, createUser, getUserById, updateUserById, deleteUserById } = require("../controllers/blog");
+const authorizeRoles = require('../middleware/authorizeRoles');
+const authenticateToken = require('../middleware/authenticateToken');
 // routes
-router.route("/api/users").post(createUser).get(getAllUsers);
-router.route("/api/user/:_id").get(getUserById).patch(updateUserById).delete(deleteUserById)
+router.post('/blog', authenticateToken, authorizeRoles(['user']), createUser);
+router.get('/blog/:_id', authenticateToken, authorizeRoles(['user']), getUserById);
+router.patch('/blog/:_id', authenticateToken, authorizeRoles(['user']), updateUserById);
+router.delete('/blog/:_id', authenticateToken, authorizeRoles(['user']), deleteUserById);
+
+router.get('/blogs', authenticateToken, authorizeRoles(['admin']), getAllUsers);
+// router.route("/user/:_id").get(getUserById).patch(updateUserById).delete(deleteUserById)
 
 module.exports = router;
