@@ -1,6 +1,7 @@
 const express = require('express');
-const {connectMongoDB} = require('./dbConnection/dbCon');
+const { connectMongoDB } = require('./dbConnection/dbCon');
 const authRouter = require('./routers/authRoute');
+const homeRouter = require('./routers/homeRoute');
 require('dotenv').config();
 
 const app = express();
@@ -12,5 +13,7 @@ app.use(express.json());
 
 // auth API
 app.use("/auth", authRouter)
+// home API
+app.use("/api/v1/home", homeRouter)
 
-app.listen(PORT, ()=>console.log("Server Listening on PORT:", PORT));
+app.listen(PORT, () => console.log("Server Listening on PORT:", PORT));
