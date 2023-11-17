@@ -37,6 +37,11 @@ const homeSchema = new mongoose.Schema
             type: Date,
             default: Date.now,
             require: true,
+        },
+        owner_Id:
+        {
+            type: String,
+            require: true,
         }
     })
 
