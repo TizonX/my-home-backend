@@ -50,8 +50,51 @@ const getAllRooms = async (req, res) => {
         return res.status(500).json({ msg: error.message });
     }
 }
+// get room by room id
+const getRoomById = async (req, res) => {
+    const { room_Id } = req.params;
+    try {
+        const room = await Room.findById({ _id: room_Id });
+        if (!room) {
+            return res.status(400).json({ error: 'Room Not found with this Id' });
+        }
+        return res.status(200).json(room);
+    } catch (error) {
+        console.log("create room err >>", error.message);
+        return res.status(500).json({ msg: error.message });
+    }
+}
+// update room by id
+const updateRoomById = async (req, res) => {
+    const { room_Id } = req.params;
+    const { roomNo } = req.body;
+    const { _id } = req.user;
+    try {
+        const isRoomExist = await Room.findById({ _id: room_Id });
+        if (!isRoomExist) {
+            return res.status(400).json({ error: 'No room found' });
+        }
+        if (isRoomExist.owner_Id !== _id) {
+            return res.status(400).json({ error: 'This Room Doesnt belongs to you' });
+        }
+        if (isRoomExist.roomNo !== roomNo) {
+            const isSameRoomNoExist = await Room.findOne({ roomNo });
+            if (isSameRoomNoExist) {
+                return res.status(400).json({ error: 'This Room No Already Exists' });
+            }
+        }
+        Object.assign(isRoomExist, req.body);
+        const newRoom = await isRoomExist.save();
+        return res.status(201).json(newRoom);
+    } catch (error) {
+        console.log("create room err >>", error.message);
+        return res.status(500).json({ msg: error.message });
+    }
+}
 module.exports = {
     createRoom,
     getAllRooms,
+    getRoomById,
+    updateRoomById,
 
 }
