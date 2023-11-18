@@ -87,7 +87,26 @@ const updateRoomById = async (req, res) => {
         const newRoom = await isRoomExist.save();
         return res.status(201).json(newRoom);
     } catch (error) {
-        console.log("create room err >>", error.message);
+        console.log("update room err >>", error.message);
+        return res.status(500).json({ msg: error.message });
+    }
+}
+// delete room by id
+const deleteRoomById = async (req, res) => {
+    const { room_Id } = req.params;
+    const { _id } = req.user;
+    try {
+        const isPropertyExist = await Room.findById({ _id: room_Id });
+        if (!isPropertyExist) {
+            return res.status(400).json({ error: 'No room found with this Id' });
+        }
+        if (isPropertyExist.owner_Id !== _id) {
+            return res.status(400).json({ error: 'This Room Doesnt Belongs to you' });
+        }
+        await Room.findByIdAndDelete({ _id: room_Id });
+        return res.status(200).json({ message: "Room Deleted Successfully" });
+    } catch (error) {
+        console.log("delete room err >>", error.message);
         return res.status(500).json({ msg: error.message });
     }
 }
@@ -96,5 +115,5 @@ module.exports = {
     getAllRooms,
     getRoomById,
     updateRoomById,
-
+    deleteRoomById
 }

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createRoom, getAllRooms, getRoomById,updateRoomById } = require('../controllers/roomCtrl');
+const { createRoom, getAllRooms, getRoomById,updateRoomById, deleteRoomById } = require('../controllers/roomCtrl');
 const authenticateToken = require('../middlewares/authenticateToken');
 const authorizeRoles = require("../middlewares/authorizeRoles");
 
@@ -12,4 +12,8 @@ router.get("/:owner_Id/:home_Id", authenticateToken, authorizeRoles(['owner']), 
 router.get("/:room_Id", authenticateToken, authorizeRoles(['owner', 'renter']), getRoomById);
 // update room by id
 router.patch("/:room_Id", authenticateToken, authorizeRoles(['owner']), updateRoomById);
+// delete room by id
+router.delete("/:room_Id", authenticateToken, authorizeRoles(['owner']), deleteRoomById);
+
+
 module.exports = router
