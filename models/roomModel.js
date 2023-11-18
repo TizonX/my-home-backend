@@ -40,6 +40,10 @@ const roomSchema = new mongoose.Schema
         {
             type: String,
             require: true,
+        },
+        renter_Id:
+        {
+            type:String,
         }
 
     })
