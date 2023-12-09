@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const Auth = require('./authModel');
+const Home = require('./homeModel');
 
 // room schema
 const roomSchema = new mongoose.Schema
@@ -33,17 +35,19 @@ const roomSchema = new mongoose.Schema
         },
         owner_Id:
         {
-            type: String,
+            type:  mongoose.Schema.Types.ObjectId,
+            ref: Auth,
             require: true,
         },
         home_Id:
         {
-            type: String,
+            type:  mongoose.Schema.Types.ObjectId,
+            ref: Home,
             require: true,
         },
         renter_Id:
         {
-            type:String,
+            type: mongoose.Schema.Types.ObjectId,
         }
 
     })

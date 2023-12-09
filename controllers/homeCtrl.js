@@ -22,10 +22,13 @@ const createHome = async (req, res) => {
             address,
             noOfFlore,
             createdDate,
-            owner_Id
+            owner_Id,
         })
-        await newHome.save();
-        res.json({ message: "Property save successfully!!!" });
+        const home_obj = await newHome.save();
+        res.json({
+            message: "Property save successfully!!!",
+            _id: home_obj._id
+        });
 
     } catch (error) {
         console.log("create home err >>", error.message);
@@ -132,20 +135,17 @@ const updateHomeById = async (req, res) => {
     const { owner_Id, home_Id } = req.params;
     const { houseNo } = req.body;
     try {
-
         const isHomeNoAlreadyPresent = await Home.findOne({ houseNo });
         if (isHomeNoAlreadyPresent) {
             return res.status(400).json({ error: 'House Number Should be unique' });
         }
-        // console.log(isHomeNoAlreadyPresent.houseNo);
         const isPropertyExist = await Home.findById({ _id: home_Id });
         if (!isPropertyExist) {
             return res.status(400).json({ error: 'No Property Found with this _id' });
         }
-        if (isPropertyExist.owner_Id !== owner_Id) {
+        if (!isPropertyExist.owner_Id.equals(new ObjectId(owner_Id))) {
             return res.status(400).json({ error: 'This Home doesnt belongs to you ' });
         }
-
         Object.assign(isPropertyExist, req.body);
         const updatedHome = await isPropertyExist.save();
         return res.status(200).json(updatedHome);
