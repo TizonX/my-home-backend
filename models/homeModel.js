@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Auth = require('./authModel');
 
 // home schema
 const homeSchema = new mongoose.Schema
@@ -40,7 +41,8 @@ const homeSchema = new mongoose.Schema
         },
         owner_Id:
         {
-            type: String,
+            type:  mongoose.Schema.Types.ObjectId,
+            ref: Auth,
             require: true,
         }
     })

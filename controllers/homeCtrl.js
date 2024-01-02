@@ -1,6 +1,7 @@
 const express = require('express');
 const Home = require('../models/homeModel');
-
+const Auth = require('../models/authModel');
+const { ObjectId } = require('mongoose').Types;
 
 // create home
 const createHome = async (req, res) => {
@@ -21,10 +22,13 @@ const createHome = async (req, res) => {
             address,
             noOfFlore,
             createdDate,
-            owner_Id
+            owner_Id,
         })
-        await newHome.save();
-        res.json({ message: "Property save successfully!!!" });
+        const home_obj = await newHome.save();
+        res.json({
+            message: "Property save successfully!!!",
+            _id: home_obj._id
+        });
 
     } catch (error) {
         console.log("create home err >>", error.message);
@@ -32,10 +36,69 @@ const createHome = async (req, res) => {
     }
 }
 // get all home data
+// const getAllHome = async (req, res) => {
+//     const { owner_Id } = req.params;
+//     try {
+//         const allHomeData = await Home.find({ owner_Id });
+//         if (!allHomeData) {
+//             return res.status(400).json({ error: 'Somthing wents wrong' });
+//         }
+//         return res.status(200).json(allHomeData);
+//     } catch (error) {
+//         console.log("all home err >>", error.message);
+//         return res.status(500).json({ msg: error.message });
+//     }
+// }
+
 const getAllHome = async (req, res) => {
     const { owner_Id } = req.params;
+    const userId = new ObjectId(owner_Id);
     try {
-        const allHomeData = await Home.find({ owner_Id });
+        const allHomeData = await Auth.aggregate([
+            {
+                $match: {
+                    _id: userId,
+                }
+            },
+            {
+                $lookup: {
+                    from: "homes",
+                    let: { userId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ["$$userId", { $toObjectId: "$owner_Id" }]
+                                }
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "rooms",
+                                let: { homeId: "$_id" },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $eq: ["$$homeId", { $toObjectId: "$home_Id" }]
+                                            }
+                                        }
+                                    }
+                                ],
+                                as: "rooms"
+                            }
+                        }
+                    ],
+                    as: "homes"
+                }
+            },
+            {
+                $project: {
+                    password: 0 // Exclude the password field
+                }
+            }
+        ]);
+
         if (!allHomeData) {
             return res.status(400).json({ error: 'Somthing wents wrong' });
         }
@@ -45,6 +108,8 @@ const getAllHome = async (req, res) => {
         return res.status(500).json({ msg: error.message });
     }
 }
+
+
 // getHomeById
 const getHomeById = async (req, res) => {
     try {
@@ -70,20 +135,17 @@ const updateHomeById = async (req, res) => {
     const { owner_Id, home_Id } = req.params;
     const { houseNo } = req.body;
     try {
-
         const isHomeNoAlreadyPresent = await Home.findOne({ houseNo });
         if (isHomeNoAlreadyPresent) {
             return res.status(400).json({ error: 'House Number Should be unique' });
         }
-        // console.log(isHomeNoAlreadyPresent.houseNo);
         const isPropertyExist = await Home.findById({ _id: home_Id });
         if (!isPropertyExist) {
             return res.status(400).json({ error: 'No Property Found with this _id' });
         }
-        if (isPropertyExist.owner_Id !== owner_Id) {
+        if (!isPropertyExist.owner_Id.equals(new ObjectId(owner_Id))) {
             return res.status(400).json({ error: 'This Home doesnt belongs to you ' });
         }
-
         Object.assign(isPropertyExist, req.body);
         const updatedHome = await isPropertyExist.save();
         return res.status(200).json(updatedHome);
