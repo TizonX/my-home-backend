@@ -16,9 +16,16 @@ const createHome = async (req, res) => {
       createdDate,
       owner_Id,
     } = req.body;
-    const { filename, path } = req.file;
-    console.log("m1 :", req.body);
-    console.log("m2:", req.file);
+    let singleImagePath = "";
+    if (req.files["upload"][0]) {
+      const { filename, path } = req.files["upload"][0];
+      singleImagePath = path;
+    }
+
+    const multipleimages = [];
+    req.files["uploadMultiple"]?.map((data) => {
+      multipleimages.push(`http://localhost:${process.env.PORT}/` + data.path);
+    });
 
     if (!houseNo) {
       return res.status(400).json({ error: "House No is Required!!!" });
@@ -28,8 +35,8 @@ const createHome = async (req, res) => {
       return res.status(400).json({ error: "Property Already Exists" });
     }
     const newHome = new Home({
-      bannerImage: `http://localhost:${process.env.PORT}/` + path,
-      multiImage,
+      bannerImage: `http://localhost:${process.env.PORT}/` + singleImagePath,
+      multiImage: multipleimages,
       propertyName,
       houseNo,
       address,

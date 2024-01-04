@@ -14,14 +14,14 @@ const multer = require("multer");
 // multer-code here
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    return cb(null, "./public/images");
+    cb(null, "./public/homeimages");
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 6);
-    return cb(null, uniqueSuffix + "-" + file.originalname);
+    cb(null, uniqueSuffix + "-" + file.originalname);
   },
 });
-const upload = multer({ storage: storage });
+const upload_ = multer({ storage: storage });
 // multer code end
 
 // create home
@@ -29,7 +29,7 @@ router.post(
   "/",
   authenticateToken,
   authorizeRoles(["owner"]),
-  upload.single("upload"),
+  upload_.fields([{ name: "upload" }, { name: "uploadMultiple", maxCount: 5 }]),
   createHome
 );
 // get all home data
