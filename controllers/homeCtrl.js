@@ -3,6 +3,23 @@ const Home = require("../models/homeModel");
 const Auth = require("../models/authModel");
 const { ObjectId } = require("mongoose").Types;
 
+function areObjectsEqual(obj1, obj2) {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  for (let key of keys1) {
+    if (obj1[key] !== obj2[key]) {
+      return false;
+    }
+  }
+
+  return true;
+} //
+
 // create home
 const createHome = async (req, res) => {
   try {
@@ -55,23 +72,11 @@ const createHome = async (req, res) => {
   }
 };
 // get all home data
-// const getAllHome = async (req, res) => {
-//     const { owner_Id } = req.params;
-//     try {
-//         const allHomeData = await Home.find({ owner_Id });
-//         if (!allHomeData) {
-//             return res.status(400).json({ error: 'Somthing wents wrong' });
-//         }
-//         return res.status(200).json(allHomeData);
-//     } catch (error) {
-//         console.log("all home err >>", error.message);
-//         return res.status(500).json({ msg: error.message });
-//     }
-// }
-
 const getAllHome = async (req, res) => {
+  const { _id: user_id } = req.user;
   const { owner_Id } = req.params;
-  const userId = new ObjectId(owner_Id);
+  // don't remove it is important, if you have to convert the string  into object id
+  const userId = new ObjectId(user_id);
   try {
     const allHomeData = await Auth.aggregate([
       {
@@ -127,24 +132,56 @@ const getAllHome = async (req, res) => {
     return res.status(500).json({ msg: error.message });
   }
 };
-
 // getHomeById
 const getHomeById = async (req, res) => {
   try {
-    const { owner_Id, home_Id } = req.params;
+    const { _id: user_id } = req.user;
+    const { home_Id } = req.params;
+    const userId = new ObjectId(user_id);
     if (!home_Id) {
       return res.status(400).json({ error: "Property id is missing" });
     }
-    const isPropertyExist = await Home.findOne({ _id: home_Id });
+    // my code start
+    const isPropertyExist = await Home.aggregate([
+      {
+        $match: {
+          _id: new ObjectId(home_Id),
+        },
+      },
+      {
+        $lookup: {
+          from: "rooms",
+          let: { homeId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$$homeId", { $toObjectId: "$home_Id" }],
+                },
+              },
+            },
+          ],
+          as: "rooms",
+        },
+      },
+      {
+        $limit: 1,
+      },
+    ]);
+    // end
+    // const isPropertyExist = await Home.findOne({ _id: home_Id });
     if (!isPropertyExist) {
       return res.status(400).json({ error: "No Property Found with this _id" });
     }
-    if (isPropertyExist.owner_Id !== owner_Id) {
-      return res
-        .status(400)
-        .json({ error: "This Home doesnt belongs to you " });
+    if (!isPropertyExist || isPropertyExist.length === 0) {
+      return res.status(400).json({ error: "No Property Found with this _id" });
     }
-    return res.status(200).json(isPropertyExist);
+    // Check if the user owns the home
+    if (!userId.equals(isPropertyExist[0].owner_Id)) {
+      return res.status(400).json({ error: "This Home doesn't belong to you" });
+    }
+    //
+    return res.status(200).json(...isPropertyExist);
   } catch (error) {
     console.log("get property by id err >>", error.message);
     return res.status(500).json({ msg: error.message });

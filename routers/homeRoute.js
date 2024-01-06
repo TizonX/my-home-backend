@@ -34,14 +34,14 @@ router.post(
 );
 // get all home data
 router.get(
-  "/:owner_Id",
+  "/",
   authenticateToken,
   authorizeRoles(["owner"]),
   getAllHome
 );
 // get home by id
 router.get(
-  "/:owner_Id/:home_Id",
+  "/:home_Id",
   authenticateToken,
   authorizeRoles(["owner", "renter"]),
   getHomeById
