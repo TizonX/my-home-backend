@@ -4,7 +4,8 @@ const Home = require("../models/homeModel");
 const { ObjectId } = require("mongoose").Types;
 // create room
 const createRoom = async (req, res) => {
-  const { owner_Id, home_Id } = req.params;
+  const { home_Id } = req.params;
+  const { _id: owner_Id } = req.user;
   const {
     image,
     multiImage,
@@ -14,7 +15,9 @@ const createRoom = async (req, res) => {
     facility,
     renter_Id = "",
   } = req.body;
-  renter_Id = new ObjectId(renter_Id);
+  if (renter_Id) {
+    renter_Id = new ObjectId(renter_Id);
+  }
   try {
     const isRoomExist = await Room.findOne({ home_Id, roomNo });
     if (isRoomExist) {
@@ -40,9 +43,10 @@ const createRoom = async (req, res) => {
       facility,
       owner_Id,
       home_Id,
-      renter_Id: renter_Id,
+      renter_Id: renter_Id ? renter_Id : null,
     });
     await newRoom.save();
+    console.log(newRoom);
     return res.status(201).json({ message: `New Room Created` });
   } catch (error) {
     console.log("create room err >>", error.message);
