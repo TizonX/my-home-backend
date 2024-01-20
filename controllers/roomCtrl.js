@@ -7,14 +7,21 @@ const createRoom = async (req, res) => {
   const { home_Id } = req.params;
   const { _id: owner_Id } = req.user;
   const {
-    image,
-    multiImage,
     flore,
     roomNo,
     roomType,
     facility,
     renter_Id = "",
   } = req.body;
+  let singleImagePath = "";
+  if (req.files["image"][0]) {
+    const { filename, path } = req.files["image"][0];
+    singleImagePath = path;
+  }
+  const multipleimages = [];
+  req.files["multiImage"]?.map((data) => {
+    multipleimages.push(`http://localhost:${process.env.PORT}/` + data.path);
+  });
   if (renter_Id) {
     renter_Id = new ObjectId(renter_Id);
   }
@@ -35,8 +42,8 @@ const createRoom = async (req, res) => {
         });
     }
     const newRoom = new Room({
-      image,
-      multiImage,
+      image: `http://localhost:${process.env.PORT}/` + singleImagePath,
+      multiImage: multipleimages,
       flore,
       roomNo,
       roomType,
@@ -46,7 +53,6 @@ const createRoom = async (req, res) => {
       renter_Id: renter_Id ? renter_Id : null,
     });
     await newRoom.save();
-    console.log(newRoom);
     return res.status(201).json({ message: `New Room Created` });
   } catch (error) {
     console.log("create room err >>", error.message);

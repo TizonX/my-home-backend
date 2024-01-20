@@ -24,8 +24,6 @@ function areObjectsEqual(obj1, obj2) {
 const createHome = async (req, res) => {
   try {
     const {
-      bannerImage,
-      multiImage,
       propertyName,
       houseNo,
       address,
